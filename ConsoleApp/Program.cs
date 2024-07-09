@@ -1,19 +1,34 @@
-﻿using Dapr.Client;
+﻿using Common.Models.Requests;
+using Dapr.Client;
 using System.Net.Http.Json;
-using System.Text.Json.Serialization;
-using Common.Models.Requests;
 
-using var client = new DaprClientBuilder().Build();
+using var client = DaprClient.CreateInvokeHttpClient(appId: "alertapi");
 
-List<string> alerts = new() { "Alert1", "Alert2", "Alert3" };
+var response = await client.PostAsJsonAsync<SmsAlertRequest>(
+    "sendSms",
+    new SmsAlertRequest
+    {
+        PhoneNumber = "12345678"
+    });
+response.EnsureSuccessStatusCode();
 
-var alertrequest = new AlertRequest
-{
-    AlertTypes = alerts,
-    ClientName = "Generic Client"
-};
+response = await client.PostAsJsonAsync<EmailAlertRequest>(
+    "sendEmail",
+    new EmailAlertRequest
+    {
+        EmailAddress = "me@home.com",
+        Subject = "This is a subject"
+    });
+response.EnsureSuccessStatusCode();
 
-// Invoke each method of the AlertApi here
+var response = await client.PostAsJsonAsync<AlertRequest>(
+    "sendAlert",
+    new AlertRequest
+    {
+        AlertTypes = new List<string> { "Alert1", "Alert2", "Alert3" },
+        ClientName = "Generic Client"
+    });
+response.EnsureSuccessStatusCode();
 
 Console.Read();
 
